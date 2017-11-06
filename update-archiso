@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Revised 6th August 2017 to remove architecture-specific references.
+# Old version retained for safety as update-archiso-dual
+
+# This script is used to generate a new feliz folder after archiso is
+# updated. The feliz folder is then copied manually for iso generation.
+# See text file named READ ME EVERY TIME for details
+
+# This script must be in the 'Build' directory, and must be run as root
+#
+
+# Make safe copy of existing feliz folder
+if [ -d feliz ]; then
+  mv -f feliz feliz-safe-copy
+fi
+
+# Get a fresh copy of releng and rename it 'feliz'
+cp -r /usr/share/archiso/configs/releng/ feliz
+# Change into the new directory
+cd feliz									                 
+
+# 0 - Add airootfs/etc/skel/
+mkdir airootfs/etc/skel/
+
+# 1 - syslinux/archiso_pxe.cfg
+sed -i '5 c\Boot the Feliz (x86_64) Arch Linux Installer (Using NBD).' syslinux/archiso_pxe.cfg
+sed -i '6 c\Helps you to install Arch Linux.' syslinux/archiso_pxe.cfg
+sed -i '8 c\MENU LABEL Boot Feliz (x86_64) (NBD)' syslinux/archiso_pxe.cfg
+sed -i '16 c\Boot the Feliz (x86_64) Arch Linux Installer (Using NFS).' syslinux/archiso_pxe.cfg
+sed -i '17 c\Helps you to install Arch Linux.' syslinux/archiso_pxe.cfg
+sed -i '19 c\MENU LABEL Boot Feliz (x86_64) (NFS)' syslinux/archiso_pxe.cfg
+sed -i '27 c\Boot the Feliz (x86_64) Arch Linux Installer (Using HTTP).' syslinux/archiso_pxe.cfg
+sed -i '28 c\Helps you to install Arch Linux.' syslinux/archiso_pxe.cfg
+sed -i '30 c\MENU LABEL Boot Feliz (x86_64) (HTTP)' syslinux/archiso_pxe.cfg
+
+# 2 - syslinux/archiso_sys.cfg
+sed -i '5 c\Boot the Feliz (x86_64) Arch Linux Installer.' syslinux/archiso_sys.cfg
+sed -i '6 c\Helps you to install Arch Linux.' syslinux/archiso_sys.cfg
+sed -i '8 c\MENU LABEL Boot Feliz (x86_64) Arch Linux Installer' syslinux/archiso_sys.cfg
+sed -i '11 c\APPEND archisobased -iir=%INSTALL_DIR% archisolabel=%ARCHISO_LABEL% script=felizinit' syslinux/archiso_sys.cfg
+
+# 3 - airootfs/etc/hostname
+echo 'feliz' > airootfs/etc/hostname
+
+# 4 - Copy the Feliz splash screen into syslinux/
+cp -f /home/elizabeth/Build/splash.png syslinux/splash.png
+
+#
+# 5 - build.sh
+sed -i '5 c\iso_name=feliz' build.sh
+sed -i '6 c\iso_label="feliz-$(date +%Y%m)"' build.sh
+
+# 6 - Add required extra programs for installation
+echo "reflector" >> packages.both
+echo "unzip" >> packages.both
+
+# 7 - efi files
+sed -i '5 c\options archisobasedir=%INSTALL_DIR% archisolabel=%ARCHISO_LABEL% script=felizinit' efiboot/loader/entries/archiso-x86_64-cd.conf
+sed -i '5 c\options archisobasedir=%INSTALL_DIR% archisolabel=%ARCHISO_LABEL% script=felizinit' efiboot/loader/entries/archiso-x86_64-usb.conf

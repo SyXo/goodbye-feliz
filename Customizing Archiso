@@ -1,0 +1,59 @@
+Configuring the archiso files
+-----------------------------
+
+Note: A shell script 'update-archiso' has been written to carry out all
+the actions listed here.
+
+Note: From March 2017, Arch no longer supports 32 bit (i686) architecture.
+      Any architecture-specific instructions in these notes are to be neutered.
+
+Note: Read the 'READ ME EVERY TIME' file in this directory.
+
+------------------------------------------------------------------------
+
+When archiso is updated:
+	Copy /usr/share/archiso/configs/releng to the Build folder
+
+Add desired extra packages to the packages.both file ...
+	reflector, unzip
+
+Edit the following files ...
+
+1) build.sh
+	Line 5: iso_name=Feliz
+	Line 6: iso_label="Feliz-$(date +%Y%m)"
+
+2) Various files in the syslinux folder ...
+
+   (a) archiso_head
+	Line 3: MENU TITLE Feliz Arch Linux installer
+
+   (b) archiso_pxe32.cfg & archiso_pxe64.cfg
+	For each LABEL, under TEXT HELP:
+	  Boot the Feliz! (i686) Arch Linux Installer (Using NBD).
+	  Helps you to install Arch Linux.
+	Under ENDTEXT:
+	  MENU LABEL Boot Feliz! (i686) (NBD)
+
+   (c) archiso_sys64.cfg & archiso_sys32.cfg
+	Under LABEL and TEXT HELP:
+	  Boot the Feliz (x86_64) Arch Linux Installer.
+	  Helps you to install Arch Linux.
+	Under ENDTEXT:
+	  MENU LABEL Boot Feliz (x86_64) Arch Linux Installer
+	  ...
+	  APPEND archisobasedir=%INSTALL_DIR% archisolabel=%ARCHISO_LABEL% script=felizinit
+
+	Note the added text "script=felizinit" at the end of the APPEND line
+  
+3) Files in the efiboot/loader/entries/ folder ... 
+    archiso-x86_64-cd.conf and archiso-x86_64-usb.conf
+      Amend the last line (line 5) so that it reads ...
+        options archisobasedir=%INSTALL_DIR% archisolabel=%ARCHISO_LABEL% script=felizinit
+        
+4)  Copy in the Feliz splash screen
+
+Also, edit locale in ~/Build/releng-master/airootfs/root/customize_airootfs.sh
+  
+When ready to build a new Feliz initialising iso, copy either felizinit-testing
+or felizinit-stable into skel, then rename it to: felizinit
